@@ -1,0 +1,3 @@
+[submodule "Scavenger/Common/ScopedResource"]
+	path = Scavenger/Common/ScopedResource
+	url = git@github.com:tandasat/ScopedResource.git
