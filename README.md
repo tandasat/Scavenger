@@ -12,7 +12,7 @@ or [Capture-BAT](https://www.honeynet.org/node/315)).
 Installation and Uninstallation
 -----------------
 
-Use a DrvLoader with a -F option.
+Use a [DrvLoader](https://github.com/tandasat/DrvLoader) with a -F option.
 
 
 Usage
