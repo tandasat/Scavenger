@@ -361,11 +361,14 @@ EXTERN_C static NTSTATUS ScvnpScavenge(_Inout_ PFLT_CALLBACK_DATA Data,
       FltAllocatePoolAlignedWithTag(FltObjects->Instance, NonPagedPool,
                                     targetFileSize, SCVN_POOL_TAG_NAME),
       [FltObjects](void *p) {
-        FltFreePoolAlignedWithTag(FltObjects->Instance, p, SCVN_POOL_TAG_NAME);
+        if (p) {
+          FltFreePoolAlignedWithTag(FltObjects->Instance, p,
+                                    SCVN_POOL_TAG_NAME);
+        }
       });
   if (!buffer) {
     LOG_ERROR_SAFE(
-        "%-25s : FltAllocatePoolAlignedWithTag failed (%08x) for %wZ",
+        "%-25s : FltAllocatePoolAlignedWithTag failed (%lu bytes) for %wZ",
         operationType, targetFileSize, &fileNameInformation->Name);
     return status;
   }
@@ -412,8 +415,8 @@ EXTERN_C static NTSTATUS ScvnpScavenge(_Inout_ PFLT_CALLBACK_DATA Data,
   }
 
   // Done
-  LOG_INFO_SAFE("%S = %-25s for %wZ (%wZ)", sha1HashW, operationType,
-                &fileNameInformation->FinalComponent,
+  LOG_INFO_SAFE("%-25s for %wZ (saved as %S, %lu bytes, %wZ)", operationType,
+                &fileNameInformation->FinalComponent, sha1HashW, targetFileSize,
                 &fileNameInformation->Name);
   return status;
 }
