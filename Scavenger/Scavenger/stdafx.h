@@ -8,6 +8,14 @@
 // are changed infrequently
 //
 
+//
+// NOTE:
+//
+// About building the driver:
+//  Visual Studio will pop up a dialog during a build process and require a
+//  password for code signing. Type "password" for it.
+//
+
 #pragma once
 
 extern "C" {

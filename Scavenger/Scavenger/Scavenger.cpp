@@ -70,7 +70,7 @@ EXTERN_C static bool ScvnpIsWhiteListedFile(_In_ PUNICODE_STRING
 EXTERN_C static NTSTATUS ScvnpReadFile(_In_ PFLT_CALLBACK_DATA Data,
                                        _In_ PCFLT_RELATED_OBJECTS FltObjects,
                                        _Out_ void *Buffer,
-                                       _In_ SIZE_T BufferSize);
+                                       _In_ ULONG BufferSize);
 
 EXTERN_C static NTSTATUS ScvnpWriteFile(_In_ PCFLT_RELATED_OBJECTS FltObjects,
                                         _In_ const wchar_t *OutPathW,
@@ -79,7 +79,7 @@ EXTERN_C static NTSTATUS ScvnpWriteFile(_In_ PCFLT_RELATED_OBJECTS FltObjects,
                                         _In_ ULONG CreateDisposition);
 
 EXTERN_C static NTSTATUS ScvnpGetSha1(_Out_ UCHAR(&Sha1Hash)[20],
-                                      _In_ void *Data, _In_ SIZE_T DataSize);
+                                      _In_ void *Data, _In_ ULONG DataSize);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -100,12 +100,12 @@ EXTERN_C NTSTATUS DriverEntry(_In_ PDRIVER_OBJECT DriverObject,
                               _In_ PUNICODE_STRING RegistryPath) {
   const FLT_OPERATION_REGISTRATION fltCallbacks[] = {
       {
-       IRP_MJ_CLEANUP, FLTFL_OPERATION_REGISTRATION_SKIP_PAGING_IO, nullptr,
-       ScvnpPostCleanupAndFlushBuffers,
+          IRP_MJ_CLEANUP, FLTFL_OPERATION_REGISTRATION_SKIP_PAGING_IO, nullptr,
+          ScvnpPostCleanupAndFlushBuffers,
       },
       {
-       IRP_MJ_FLUSH_BUFFERS, FLTFL_OPERATION_REGISTRATION_SKIP_PAGING_IO,
-       nullptr, ScvnpPostCleanupAndFlushBuffers,
+          IRP_MJ_FLUSH_BUFFERS, FLTFL_OPERATION_REGISTRATION_SKIP_PAGING_IO,
+          nullptr, ScvnpPostCleanupAndFlushBuffers,
       },
       {IRP_MJ_SET_INFORMATION, FLTFL_OPERATION_REGISTRATION_SKIP_PAGING_IO,
        ScvnpPreSetInformation, nullptr},
@@ -447,7 +447,7 @@ ALLOC_TEXT(PAGED, ScvnpReadFile)
 EXTERN_C static NTSTATUS ScvnpReadFile(_In_ PFLT_CALLBACK_DATA Data,
                                        _In_ PCFLT_RELATED_OBJECTS FltObjects,
                                        _Out_ void *Buffer,
-                                       _In_ SIZE_T BufferSize) {
+                                       _In_ ULONG BufferSize) {
   PAGED_CODE();
 
   // Use an existing file object when it is NOT IRP_MJ_CLEANUP.
@@ -577,7 +577,7 @@ EXTERN_C static NTSTATUS ScvnpWriteFile(_In_ PCFLT_RELATED_OBJECTS FltObjects,
 // Calculate SHA1
 ALLOC_TEXT(PAGED, ScvnpGetSha1)
 EXTERN_C static NTSTATUS ScvnpGetSha1(_Out_ UCHAR(&Sha1Hash)[20],
-                                      _In_ void *Data, _In_ SIZE_T DataSize) {
+                                      _In_ void *Data, _In_ ULONG DataSize) {
   PAGED_CODE();
 
   BCRYPT_HASH_HANDLE hashHandle = nullptr;

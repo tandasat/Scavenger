@@ -14,6 +14,14 @@ Installation and Uninstallation
 
 Use a [DrvLoader](https://github.com/tandasat/DrvLoader) with a -F option.
 
+On the x64 bit platform, you have to enable test signing to install the driver.
+To do that, open the command prompt with the administrator privilege and type 
+the following command:
+
+   >bcdedit /set {current} testsigning on
+    
+Then, reboot the system to activate the change.
+
 
 Usage
 -------
@@ -30,7 +38,7 @@ any of operations done by a system thread.
 
 Supported Platforms
 -----------------
-- Windows 7 SP1 x86
+- Windows 7 SP1, 8.1 (x86/x64)
 
 
 License

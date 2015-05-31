@@ -32,18 +32,18 @@
 
 // Buffers the log to buffer. It is recommended to use it when a status of
 // callee is no predictable in order to avoid bug checks.
-#define LOG_DEBUG_SAFE(format, ...)                                        \
+#define LOG_DEBUG_SAFE(format, ...)                                         \
   LogpPrint(LOGP_LEVEL_DEBUG | LOGP_LEVEL_OPT_SAFE, __FUNCTION__, (format), \
-           __VA_ARGS__)
-#define LOG_INFO_SAFE(format, ...)                                        \
+            __VA_ARGS__)
+#define LOG_INFO_SAFE(format, ...)                                         \
   LogpPrint(LOGP_LEVEL_INFO | LOGP_LEVEL_OPT_SAFE, __FUNCTION__, (format), \
-           __VA_ARGS__)
-#define LOG_WARN_SAFE(format, ...)                                        \
+            __VA_ARGS__)
+#define LOG_WARN_SAFE(format, ...)                                         \
   LogpPrint(LOGP_LEVEL_WARN | LOGP_LEVEL_OPT_SAFE, __FUNCTION__, (format), \
-           __VA_ARGS__)
-#define LOG_ERROR_SAFE(format, ...)                                        \
+            __VA_ARGS__)
+#define LOG_ERROR_SAFE(format, ...)                                         \
   LogpPrint(LOGP_LEVEL_ERROR | LOGP_LEVEL_OPT_SAFE, __FUNCTION__, (format), \
-           __VA_ARGS__)
+            __VA_ARGS__)
 
 ////////////////////////////////////////////////////////////////////////////////
 //
