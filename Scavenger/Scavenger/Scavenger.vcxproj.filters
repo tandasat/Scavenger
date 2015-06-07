@@ -45,7 +45,4 @@
       <Filter>Header Files\../Common\ScopedResource</Filter>
     </ClInclude>
   </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\README.md" />
-  </ItemGroup>
 </Project>
