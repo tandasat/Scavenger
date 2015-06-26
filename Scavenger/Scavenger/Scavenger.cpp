@@ -404,10 +404,19 @@ EXTERN_C static NTSTATUS ScvnpScavenge(_Inout_ PFLT_CALLBACK_DATA Data,
   }
   status = ScvnpWriteFile(FltObjects, outPathW, buffer.get(), targetFileSize,
                           FILE_CREATE);
-  if (status == STATUS_OBJECT_NAME_COLLISION ||
-      status == STATUS_DELETE_PENDING) {
+  if (status == STATUS_DELETE_PENDING) {
     return STATUS_SUCCESS;
   }
+
+  if (status == STATUS_OBJECT_NAME_COLLISION)
+  {
+    // The same SHA1 is already there
+    LOG_INFO_SAFE("%-25s for %wZ (dup with %S, %lu bytes, %wZ)", operationType,
+      &fileNameInformation->FinalComponent, sha1HashW, targetFileSize,
+      &fileNameInformation->Name);
+    return STATUS_SUCCESS;
+  }
+
   if (!NT_SUCCESS(status)) {
     LOG_ERROR_SAFE("%-25s : ScvnpWriteFile failed (%08x) for %wZ",
                    operationType, status, &fileNameInformation->Name);

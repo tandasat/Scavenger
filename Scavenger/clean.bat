@@ -1,5 +1,6 @@
-del *.sdf
+del *.sdf *.sdf *.opensdf
 del /a:h *.suo
+rmdir /s /q .vs
 rmdir /s /q ipch
 rmdir /s /q Win7Debug
 rmdir /s /q Win7Release
