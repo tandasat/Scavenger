@@ -13,12 +13,20 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Header Files\../Common">
-      <UniqueIdentifier>{75bee234-13a4-4682-ad7c-05efec70514a}</UniqueIdentifier>
+    <Filter Include="Driver Files">
+      <UniqueIdentifier>{8E41214B-6785-4CFE-B992-037D68949A14}</UniqueIdentifier>
+      <Extensions>inf;inv;inx;mof;mc;</Extensions>
     </Filter>
-    <Filter Include="Header Files\../Common\ScopedResource">
-      <UniqueIdentifier>{8b3a9aaa-2770-4288-bfeb-9cce9b4269e4}</UniqueIdentifier>
-    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Inf Include="Scavenger.inf">
+      <Filter>Driver Files</Filter>
+    </Inf>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Scavenger.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="log.cpp">
@@ -38,11 +46,8 @@
     <ClInclude Include="stdafx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\Common\ScopedResource\scope_exit.h">
-      <Filter>Header Files\../Common\ScopedResource</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Common\ScopedResource\unique_resource.h">
-      <Filter>Header Files\../Common\ScopedResource</Filter>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

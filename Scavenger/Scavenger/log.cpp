@@ -432,8 +432,8 @@ EXTERN_C static NTSTATUS LogpMakePrefix(_In_ ULONG Level,
   status = RtlStringCchPrintfA(
       LogBuffer, LogBufferLength, "%s%s\t%5lu\t%5lu\t%-15s\t%s%s\r\n",
       timeBuffer, levelString,
-      reinterpret_cast<ULONG>(PsGetProcessId(PsGetCurrentProcess())),
-      reinterpret_cast<ULONG>(PsGetCurrentThreadId()),
+      reinterpret_cast<ULONG_PTR>(PsGetProcessId(PsGetCurrentProcess())),
+      reinterpret_cast<ULONG_PTR>(PsGetCurrentThreadId()),
       PsGetProcessImageFileName(PsGetCurrentProcess()), functionNameBuffer,
       LogMessage);
   return status;

@@ -9,8 +9,6 @@
 #include "stdafx.h"
 #include "log.h"
 
-namespace stdexp = std::experimental;
-
 ////////////////////////////////////////////////////////////////////////////////
 //
 // macro utilities
@@ -56,16 +54,15 @@ ScvnpPostCleanupAndFlushBuffers(_Inout_ PFLT_CALLBACK_DATA Data,
                                 _In_opt_ PVOID CompletionContext,
                                 _In_ FLT_POST_OPERATION_FLAGS Flags);
 
-EXTERN_C static FLT_PREOP_CALLBACK_STATUS FLTAPI
-ScvnpPreSetInformation(_Inout_ PFLT_CALLBACK_DATA Data,
-                       _In_ PCFLT_RELATED_OBJECTS FltObjects,
-                       _Outptr_result_maybenull_ PVOID *CompletionContext);
+EXTERN_C static FLT_PREOP_CALLBACK_STATUS FLTAPI ScvnpPreSetInformation(
+    _Inout_ PFLT_CALLBACK_DATA Data, _In_ PCFLT_RELATED_OBJECTS FltObjects,
+    _Outptr_result_maybenull_ PVOID *CompletionContext);
 
 EXTERN_C static NTSTATUS ScvnpScavenge(_Inout_ PFLT_CALLBACK_DATA Data,
                                        _In_ PCFLT_RELATED_OBJECTS FltObjects);
 
-EXTERN_C static bool ScvnpIsWhiteListedFile(_In_ PUNICODE_STRING
-                                                TargetFileName);
+EXTERN_C static bool ScvnpIsWhiteListedFile(
+    _In_ PUNICODE_STRING TargetFileName);
 
 EXTERN_C static NTSTATUS ScvnpReadFile(_In_ PFLT_CALLBACK_DATA Data,
                                        _In_ PCFLT_RELATED_OBJECTS FltObjects,
@@ -143,38 +140,35 @@ EXTERN_C NTSTATUS DriverEntry(_In_ PDRIVER_OBJECT DriverObject,
   if (!NT_SUCCESS(status)) {
     return status;
   }
-  auto scopedLogTermination =
-      stdexp::make_scope_exit([] { LogTermination(nullptr); });
 
   // Initialize the crypt APIs.
   status = BCryptOpenAlgorithmProvider(&g_ScvnpSha1AlgorithmHandle,
                                        BCRYPT_SHA1_ALGORITHM, nullptr, 0);
   if (!NT_SUCCESS(status)) {
     LOG_ERROR("BCryptOpenAlgorithmProvider failed (%08x)", status);
+    LogTermination(nullptr);
     return status;
   }
-  auto scopedBCryptCloseAlgorithmProvider = stdexp::make_scope_exit(
-      [] { BCryptCloseAlgorithmProvider(g_ScvnpSha1AlgorithmHandle, 0); });
 
   // Register and start a mini filter driver
   status = FltRegisterFilter(DriverObject, &filterRegistration,
                              &g_ScvnpFilterHandle);
   if (!NT_SUCCESS(status)) {
     LOG_ERROR("FltRegisterFilter failed (%08x)", status);
+    BCryptCloseAlgorithmProvider(g_ScvnpSha1AlgorithmHandle, 0);
+    LogTermination(nullptr);
     return status;
   }
-  auto scopedFltUnregisterFilter =
-      stdexp::make_scope_exit([] { FltUnregisterFilter(g_ScvnpFilterHandle); });
 
   status = FltStartFiltering(g_ScvnpFilterHandle);
   if (!NT_SUCCESS(status)) {
     LOG_ERROR("FltStartFiltering failed (%08x)", status);
+    FltUnregisterFilter(g_ScvnpFilterHandle);
+    BCryptCloseAlgorithmProvider(g_ScvnpSha1AlgorithmHandle, 0);
+    LogTermination(nullptr);
     return status;
   }
 
-  scopedFltUnregisterFilter.release();
-  scopedBCryptCloseAlgorithmProvider.release();
-  scopedLogTermination.release();
   LOG_INFO("Scavenger installed");
   return status;
 }
@@ -239,10 +233,9 @@ ScvnpPostCleanupAndFlushBuffers(_Inout_ PFLT_CALLBACK_DATA Data,
 }
 
 //
-EXTERN_C static FLT_PREOP_CALLBACK_STATUS FLTAPI
-ScvnpPreSetInformation(_Inout_ PFLT_CALLBACK_DATA Data,
-                       _In_ PCFLT_RELATED_OBJECTS FltObjects,
-                       _Outptr_result_maybenull_ PVOID *CompletionContext) {
+EXTERN_C static FLT_PREOP_CALLBACK_STATUS FLTAPI ScvnpPreSetInformation(
+    _Inout_ PFLT_CALLBACK_DATA Data, _In_ PCFLT_RELATED_OBJECTS FltObjects,
+    _Outptr_result_maybenull_ PVOID *CompletionContext) {
   UNREFERENCED_PARAMETER(CompletionContext);
 
   if (KeGetCurrentIrql() != PASSIVE_LEVEL) {
@@ -300,14 +293,12 @@ EXTERN_C static NTSTATUS ScvnpScavenge(_Inout_ PFLT_CALLBACK_DATA Data,
     }
     return status;
   }
-  const auto scopedFltReleaseFileNameInformation =
-      stdexp::make_scope_exit([fileNameInformation] {
-        FltReleaseFileNameInformation(fileNameInformation);
-      });
+
   status = FltParseFileNameInformation(fileNameInformation);
   if (!NT_SUCCESS(status)) {
     LOG_ERROR_SAFE("%-25s : FltParseFileNameInformation failed (%08x) for %wZ",
                    operationType, status, &fileNameInformation->Name);
+    FltParseFileNameInformation(fileNameInformation);
     return status;
   }
 
@@ -318,14 +309,17 @@ EXTERN_C static NTSTATUS ScvnpScavenge(_Inout_ PFLT_CALLBACK_DATA Data,
   if (!NT_SUCCESS(status)) {
     LOG_ERROR_SAFE("%-25s : FltIsDirectory failed (%08x) for %wZ",
                    operationType, status, &fileNameInformation->Name);
+    FltParseFileNameInformation(fileNameInformation);
     return status;
   }
   if (isDirectory) {
+    FltParseFileNameInformation(fileNameInformation);
     return status;
   }
 
   // Go through a white list
   if (ScvnpIsWhiteListedFile(&fileNameInformation->Name)) {
+    FltParseFileNameInformation(fileNameInformation);
     return status;
   }
 
@@ -340,16 +334,19 @@ EXTERN_C static NTSTATUS ScvnpScavenge(_Inout_ PFLT_CALLBACK_DATA Data,
       LOG_ERROR_SAFE("%-25s : FltQueryInformationFile failed (%08x) for %wZ",
                      operationType, status, &fileNameInformation->Name);
     }
+    FltParseFileNameInformation(fileNameInformation);
     return status;
   }
 
   // Ignore if the file is empty
   if (fileInfo.EndOfFile.QuadPart == 0) {
+    FltParseFileNameInformation(fileNameInformation);
     return status;
   }
 
   // Ignore if the file size is greater than 4GB
   if (fileInfo.EndOfFile.HighPart != 0) {
+    FltParseFileNameInformation(fileNameInformation);
     return STATUS_FILE_TOO_LARGE;
   }
 
@@ -357,35 +354,28 @@ EXTERN_C static NTSTATUS ScvnpScavenge(_Inout_ PFLT_CALLBACK_DATA Data,
 
   // Read entire contents of the file onto non paged memory. Thus, it may fail
   // to handle a file larger than the amount of available memory.
-  const auto buffer = stdexp::make_unique_resource(
-      FltAllocatePoolAlignedWithTag(FltObjects->Instance, NonPagedPool,
-                                    targetFileSize, SCVN_POOL_TAG_NAME),
-      [FltObjects](void *p) {
-        if (p) {
-          FltFreePoolAlignedWithTag(FltObjects->Instance, p,
-                                    SCVN_POOL_TAG_NAME);
-        }
-      });
+  const auto buffer = FltAllocatePoolAlignedWithTag(
+      FltObjects->Instance, NonPagedPoolNx, targetFileSize, SCVN_POOL_TAG_NAME);
   if (!buffer) {
     LOG_ERROR_SAFE(
         "%-25s : FltAllocatePoolAlignedWithTag failed (%lu bytes) for %wZ",
         operationType, targetFileSize, &fileNameInformation->Name);
-    return status;
+    goto End;
   }
-  status = ScvnpReadFile(Data, FltObjects, buffer.get(), targetFileSize);
+  status = ScvnpReadFile(Data, FltObjects, buffer, targetFileSize);
   if (!NT_SUCCESS(status)) {
     LOG_ERROR_SAFE("%-25s : ScvnpReadFile failed (%08x) for %wZ", operationType,
                    status, &fileNameInformation->Name);
-    return status;
+    goto End;
   }
 
   // Calculate SHA1 of the written data.
   UCHAR sha1Hash[20] = {};
-  status = ScvnpGetSha1(sha1Hash, buffer.get(), targetFileSize);
+  status = ScvnpGetSha1(sha1Hash, buffer, targetFileSize);
   if (!NT_SUCCESS(status)) {
     LOG_ERROR_SAFE("%-25s : ScvnpGetSha1 failed (%08x) for %wZ", operationType,
                    status, &fileNameInformation->Name);
-    return status;
+    goto End;
   }
   wchar_t sha1HashW[41] = {};
   for (auto i = 0; i < RTL_NUMBER_OF(sha1Hash); ++i) {
@@ -400,40 +390,49 @@ EXTERN_C static NTSTATUS ScvnpScavenge(_Inout_ PFLT_CALLBACK_DATA Data,
   if (!NT_SUCCESS(status)) {
     LOG_ERROR_SAFE("%-25s : RtlStringCchPrintfW failed (%08x) for %wZ",
                    operationType, status, &fileNameInformation->Name);
-    return status;
+    goto End;
   }
-  status = ScvnpWriteFile(FltObjects, outPathW, buffer.get(), targetFileSize,
-                          FILE_CREATE);
+  status =
+      ScvnpWriteFile(FltObjects, outPathW, buffer, targetFileSize, FILE_CREATE);
   if (status == STATUS_DELETE_PENDING) {
-    return STATUS_SUCCESS;
+    status = STATUS_SUCCESS;
+    goto End;
   }
 
-  if (status == STATUS_OBJECT_NAME_COLLISION)
-  {
+  if (status == STATUS_OBJECT_NAME_COLLISION) {
     // The same SHA1 is already there
     LOG_INFO_SAFE("%-25s for %wZ (dup with %S, %lu bytes, %wZ)", operationType,
-      &fileNameInformation->FinalComponent, sha1HashW, targetFileSize,
-      &fileNameInformation->Name);
-    return STATUS_SUCCESS;
+                  &fileNameInformation->FinalComponent, sha1HashW,
+                  targetFileSize, &fileNameInformation->Name);
+    status = STATUS_SUCCESS;
+    goto End;
   }
 
   if (!NT_SUCCESS(status)) {
     LOG_ERROR_SAFE("%-25s : ScvnpWriteFile failed (%08x) for %wZ",
                    operationType, status, &fileNameInformation->Name);
-    return status;
+    goto End;
   }
 
   // Done
   LOG_INFO_SAFE("%-25s for %wZ (saved as %S, %lu bytes, %wZ)", operationType,
                 &fileNameInformation->FinalComponent, sha1HashW, targetFileSize,
                 &fileNameInformation->Name);
+
+End:
+  if (buffer) {
+    FltFreePoolAlignedWithTag(FltObjects->Instance, buffer, SCVN_POOL_TAG_NAME);
+  }
+  if (fileNameInformation) {
+    FltParseFileNameInformation(fileNameInformation);
+  }
   return status;
 }
 
 // Return true when a file path is white listed.
 ALLOC_TEXT(PAGED, ScvnpIsWhiteListedFile)
-EXTERN_C static bool ScvnpIsWhiteListedFile(_In_ PUNICODE_STRING
-                                                TargetFileName) {
+EXTERN_C static bool ScvnpIsWhiteListedFile(
+    _In_ PUNICODE_STRING TargetFileName) {
   PAGED_CODE();
 
   UNICODE_STRING WHITE_LIST[] = {
@@ -473,6 +472,8 @@ EXTERN_C static NTSTATUS ScvnpReadFile(_In_ PFLT_CALLBACK_DATA Data,
     return status;
   }
 
+  PFILE_OBJECT fileObject = nullptr;
+
   // Make a new file object since the file is already out of the current IO
   // path.
   PFLT_FILE_NAME_INFORMATION fileNameInformation = nullptr;
@@ -482,10 +483,6 @@ EXTERN_C static NTSTATUS ScvnpReadFile(_In_ PFLT_CALLBACK_DATA Data,
   if (!NT_SUCCESS(status)) {
     return status;
   }
-  const auto scopedFltReleaseFileNameInformation =
-      stdexp::make_scope_exit([fileNameInformation] {
-        FltReleaseFileNameInformation(fileNameInformation);
-      });
 
   OBJECT_ATTRIBUTES objAttr = RTL_INIT_OBJECT_ATTRIBUTES(
       &fileNameInformation->Name, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE);
@@ -502,29 +499,35 @@ EXTERN_C static NTSTATUS ScvnpReadFile(_In_ PFLT_CALLBACK_DATA Data,
   if (!NT_SUCCESS(status)) {
     LOG_ERROR_SAFE("FltCreateFile failed (%08x) for %wZ", status,
                    &fileNameInformation->Name);
-    return status;
+    goto End;
   }
-  const auto scopedFltClose =
-      stdexp::make_scope_exit([fileHandle] { FltClose(fileHandle); });
 
-  PFILE_OBJECT fileObject = nullptr;
   status = ObReferenceObjectByHandle(fileHandle, 0, nullptr, KernelMode,
                                      reinterpret_cast<void **>(&fileObject),
                                      nullptr);
   if (!NT_SUCCESS(status)) {
     LOG_ERROR_SAFE("ObReferenceObjectByHandle failed (%08x) for %wZ", status,
                    &fileNameInformation->Name);
-    return status;
+    goto End;
   }
-  const auto scopedObDereferenceObject = stdexp::make_scope_exit(
-      [fileObject] { ObDereferenceObject(fileObject); });
 
   status = FltReadFile(FltObjects->Instance, fileObject, nullptr, BufferSize,
                        Buffer, 0, nullptr, nullptr, nullptr);
   if (!NT_SUCCESS(status)) {
     LOG_ERROR_SAFE("FltReadFile failed (%08x) for %wZ", status,
                    &fileNameInformation->Name);
-    return status;
+    goto End;
+  }
+
+End:
+  if (fileObject) {
+    ObDereferenceObject(fileObject);
+  }
+  if (fileHandle) {
+    FltClose(fileHandle);
+  }
+  if (fileNameInformation) {
+    FltReleaseFileNameInformation(fileNameInformation);
   }
   return status;
 }
@@ -559,8 +562,6 @@ EXTERN_C static NTSTATUS ScvnpWriteFile(_In_ PCFLT_RELATED_OBJECTS FltObjects,
     LOG_ERROR_SAFE("FltCreateFile failed (%08x) for %S", status, OutPathW);
     return status;
   }
-  const auto scopedFltClose =
-      stdexp::make_scope_exit([fileHandle] { FltClose(fileHandle); });
 
   PFILE_OBJECT fileObject = nullptr;
   status = ObReferenceObjectByHandle(fileHandle, 0, nullptr, KernelMode,
@@ -569,16 +570,22 @@ EXTERN_C static NTSTATUS ScvnpWriteFile(_In_ PCFLT_RELATED_OBJECTS FltObjects,
   if (!NT_SUCCESS(status)) {
     LOG_ERROR_SAFE("ObReferenceObjectByHandle failed (%08x) for %S", status,
                    OutPathW);
-    return status;
+    goto End;
   }
-  const auto scopedObDereferenceObject = stdexp::make_scope_exit(
-      [fileObject] { ObDereferenceObject(fileObject); });
 
   status = FltWriteFile(FltObjects->Instance, fileObject, nullptr, BufferSize,
                         Buffer, 0, nullptr, nullptr, nullptr);
   if (!NT_SUCCESS(status)) {
     LOG_ERROR_SAFE("FltWriteFile failed (%08x) for %S", status, OutPathW);
-    return status;
+    goto End;
+  }
+
+End:
+  if (fileObject) {
+    ObDereferenceObject(fileObject);
+  }
+  if (fileHandle) {
+    FltClose(fileHandle);
   }
   return status;
 }
@@ -596,21 +603,23 @@ EXTERN_C static NTSTATUS ScvnpGetSha1(_Out_ UCHAR(&Sha1Hash)[20],
     LOG_ERROR_SAFE("BCryptCreateHash failed (%08x)", status);
     return status;
   }
-  const auto scopedBCryptDestroyHash =
-      stdexp::make_scope_exit([hashHandle] { BCryptDestroyHash(hashHandle); });
 
   status = BCryptHashData(hashHandle, static_cast<UCHAR *>(Data), DataSize, 0);
   if (!NT_SUCCESS(status)) {
     LOG_ERROR_SAFE("BCryptHashData failed (%08x)", status);
-    return status;
+    goto End;
   }
 
   static_assert(sizeof(Sha1Hash) == 20, "Size check");
   status = BCryptFinishHash(hashHandle, Sha1Hash, sizeof(Sha1Hash), 0);
   if (!NT_SUCCESS(status)) {
     LOG_ERROR_SAFE("BCryptFinishHash failed (%08x)", status);
-    return status;
+    goto End;
   }
 
+End:
+  if (hashHandle) {
+    BCryptDestroyHash(hashHandle);
+  }
   return status;
 }

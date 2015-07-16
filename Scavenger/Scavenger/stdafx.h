@@ -13,6 +13,8 @@
 extern "C" {
 #pragma warning(push, 0)
 #include <fltKernel.h>
+#include <dontuse.h>
+#include <suppress.h>
 #include <Wdmsec.h>
 #include <windef.h>
 #include <ntimage.h>
@@ -27,12 +29,6 @@ extern "C" {
 #include <bcrypt.h>
 #pragma warning(pop)
 }
-
-#ifndef _HAS_EXCEPTIONS
-#define _HAS_EXCEPTIONS 0
-#endif
-#include "../Common/ScopedResource/unique_resource.h"
-#include "../Common/ScopedResource/scope_exit.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -61,10 +57,6 @@ extern "C" {
 #endif  // _ARM_
 #endif  // DBG_BREAK
 
-// To explicitly suppress warnings
-#ifndef UNREFERENCED_LOCAL_VARIABLE
-#define UNREFERENCED_LOCAL_VARIABLE(x) (reinterpret_cast<void *>(!(x)))
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //
