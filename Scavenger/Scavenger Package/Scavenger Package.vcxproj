@@ -222,42 +222,50 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win7 Debug|Win32'">
     <PostBuildEvent>
-      <Command>copy /y "$(ProjectDir)*.bat" "$(PackageDir)"</Command>
+      <Command>mkdir "$(PackageDir)"
+copy /y "$(ProjectDir)*.bat" "$(PackageDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win7 Release|Win32'">
     <PostBuildEvent>
-      <Command>copy /y "$(ProjectDir)*.bat" "$(PackageDir)"</Command>
+      <Command>mkdir "$(PackageDir)"
+copy /y "$(ProjectDir)*.bat" "$(PackageDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win8.1 Debug|Win32'">
     <PostBuildEvent>
-      <Command>copy /y "$(ProjectDir)*.bat" "$(PackageDir)"</Command>
+      <Command>mkdir "$(PackageDir)"
+copy /y "$(ProjectDir)*.bat" "$(PackageDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win8.1 Release|Win32'">
     <PostBuildEvent>
-      <Command>copy /y "$(ProjectDir)*.bat" "$(PackageDir)"</Command>
+      <Command>mkdir "$(PackageDir)"
+copy /y "$(ProjectDir)*.bat" "$(PackageDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win7 Debug|x64'">
     <PostBuildEvent>
-      <Command>copy /y "$(ProjectDir)*.bat" "$(PackageDir)"</Command>
+      <Command>mkdir "$(PackageDir)"
+copy /y "$(ProjectDir)*.bat" "$(PackageDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win7 Release|x64'">
     <PostBuildEvent>
-      <Command>copy /y "$(ProjectDir)*.bat" "$(PackageDir)"</Command>
+      <Command>mkdir "$(PackageDir)"
+copy /y "$(ProjectDir)*.bat" "$(PackageDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win8.1 Debug|x64'">
     <PostBuildEvent>
-      <Command>copy /y "$(ProjectDir)*.bat" "$(PackageDir)"</Command>
+      <Command>mkdir "$(PackageDir)"
+copy /y "$(ProjectDir)*.bat" "$(PackageDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win8.1 Release|x64'">
     <PostBuildEvent>
-      <Command>copy /y "$(ProjectDir)*.bat" "$(PackageDir)"</Command>
+      <Command>mkdir "$(PackageDir)"
+copy /y "$(ProjectDir)*.bat" "$(PackageDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
