@@ -4,7 +4,8 @@ Scavenger
 It copies all files that were modified and some files that are being deleted to
 a C:\Windows\Scavenger\ directory.
 
-* IMPORTANT *
+* IMPORTANT
+
 It was initially developed to familiarize myself with a mini-filter driver and
 unlikely to have any notable advantages over using other open source tools 
 such as [Cockoo Sandbox](http://cuckoo.readthedocs.org/en/latest/)
