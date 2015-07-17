@@ -1,13 +1,18 @@
 Scavenger
 ==========
 
-It copies all files that were modified or being deleted to a
-C:\Windows\Scavenger\ directory.
+It copies all files that were modified and some files that are being deleted to
+a C:\Windows\Scavenger\ directory.
 
+* IMPORTANT *
 It was initially developed to familiarize myself with a mini-filter driver and
-unlikely to have any notable advantages over using other open source projects 
+unlikely to have any notable advantages over using other open source tools 
 such as [Cockoo Sandbox](http://cuckoo.readthedocs.org/en/latest/)
-or [Capture-BAT](https://www.honeynet.org/node/315).
+or [Capture-BAT](https://www.honeynet.org/node/315). 
+
+It is also rather incomplete as it does not handle FILE_DELETE_ON_CLOSE
+events. For more comprehensive code, refer to the
+[Delete File System Minifilter Driver](https://code.msdn.microsoft.com/windowshardware/Delete-File-System-b904651d) sample.
 
 
 Installation and Uninstallation
@@ -17,6 +22,7 @@ Get an archive file for compiled files form this link:
 
     https://github.com/tandasat/Scavenger/releases/latest
 
+Then:
 1. Extract the zip file and deploy appropriate version of files onto a target 
    system.
 2. On the target system, execute install.bat with the administrator privilege.
@@ -41,10 +47,11 @@ files under the C:\Windows\Scavenger\ directory.
 
 
 Caveats
--------
+--------
+
 - It does not handle:
--- a file whose size is zero or larger than 4GB, or
--- any of operations done by a system thread.
+ - a file whose size is zero or larger than 4GB, or
+ - any of operations done by a system thread.
 
 
 Supported Platforms
